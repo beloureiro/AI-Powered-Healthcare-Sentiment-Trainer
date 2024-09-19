@@ -25,7 +25,6 @@ def get_sentiment_category(score):
 
 def display_instructions():
     st.markdown("""
-    ## Instructions:
     1. Enter patient feedback in the text box below.
     2. Click "Analyze Sentiment" to process the feedback.
     3. View the results in the table and graph.

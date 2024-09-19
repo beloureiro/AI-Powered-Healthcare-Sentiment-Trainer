@@ -29,19 +29,19 @@ if 'roberta_category' not in state:
     state.roberta_category = None
 
 # Set page config
-st.set_page_config(page_title="Healthcare Sentiment Trainer", page_icon="🏥", layout="wide")
+st.set_page_config(page_title="AI-Powered Sentiment Trainer", page_icon="🏥", layout="wide")
 
 # Display logo
 st.image("Logo/Design_InMotion_Transp_wilde.png", width=600)
 
 # Display title
-st.title("Healthcare Sentiment Trainer")
+st.title(":green[_AI-Powered_] Healthcare Sentiment :green[Trainer]")
 
 # Display instructions
 display_instructions()
 
 # Input text box for patient feedback
-state.feedback = st.text_area("Enter patient feedback here:", value=state.feedback, height=100)
+state.feedback = st.text_area("", value=state.feedback, height=200, placeholder="Enter patient feedback here...")
 
 # Analyze sentiment form
 with st.form(key='analyze_form'):
