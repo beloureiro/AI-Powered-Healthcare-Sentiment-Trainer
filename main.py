@@ -27,7 +27,7 @@ if 'results' not in state:
 st.set_page_config(page_title="Healthcare Sentiment Trainer", page_icon="🏥", layout="wide")
 
 # Display logo
-st.image("Logo/Design_InMotion_Transp.png", width=700)
+st.image("Logo/Design_InMotion_Transp_wilde.png", width=600)
 
 # Display title
 st.title("Healthcare Sentiment Trainer")

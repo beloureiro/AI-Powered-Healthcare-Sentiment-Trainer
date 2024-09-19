@@ -56,7 +56,7 @@ def suggest_touchpoint(text):
 def create_sentiment_plot(df):
     print("Creating sentiment plot with data:")
     print(df.to_string())
-    colors = {'Positive': 'green', 'Neutral': 'yellow', 'Negative': 'red'}
+    colors = {'Positive': '#00854d', 'Neutral': '#94960a', 'Negative': '#990000'}
     fig = go.Figure()
     for category in df['Sentiment Category'].unique():
         category_data = df[df['Sentiment Category'] == category]
