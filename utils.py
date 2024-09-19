@@ -34,25 +34,6 @@ def display_instructions():
     6. Click "Train" to update the models with your corrections.
     """)
 
-def suggest_touchpoint(text):
-    # Simple keyword-based touchpoint suggestion
-    keywords = {
-        "search": "Search and Evaluate Professional Score",
-        "schedule": "Schedule Appointment",
-        "payment": "Make Payment Online",
-        "reception": "Make Payment at Reception",
-        "check-in": "Check-in Online",
-        "platform": "Access Platform for Online Consultation",
-        "consultation": "Attend Online Consultation",
-        "offline": "Attend Offline Consultation",
-        "follow-up": "Follow-up Procedures",
-        "review": "Leave Review and Feedback"
-    }
-    for keyword, touchpoint in keywords.items():
-        if keyword in text.lower():
-            return touchpoint
-    return "Unknown"
-
 def create_sentiment_plot(df):
     print("Creating sentiment plot with data:")
     print(df.to_string())
@@ -63,7 +44,7 @@ def create_sentiment_plot(df):
         fig.add_trace(go.Bar(
             x=category_data['Touchpoint'],
             y=category_data['Sentiment Score'],
-            name=category,
+            name=category,  
             marker_color=colors[category]
         ))
     fig.update_layout(
