@@ -68,7 +68,7 @@ with st.form(key='analyze_form'):
 
 # Sentiment adjustment form
 with st.form(key='sentiment_adjustment_form'):
-    st.subheader("Adjust Sentiment")
+    st.subheader("_Adjust Sentiment_", divider="green")
     col1, col2, col3 = st.columns(3)
     with col1:
         negative = st.form_submit_button("Negative")
@@ -88,13 +88,11 @@ with st.form(key='sentiment_adjustment_form'):
     # Touchpoint validation
     state.selected_touchpoint = st.selectbox("Validate or change the healthcare process touchpoint:", TOUCHPOINTS, index=TOUCHPOINTS.index(state.selected_touchpoint) if state.selected_touchpoint else 0)
 
-# Treinamento e captura dos valores ajustados
-with st.form(key='train_form'):
-    train_button = st.form_submit_button("Train")
+    # Mover o botão "Train" para ficar abaixo do seletor de touchpoint
+    train_button = st.form_submit_button("Train")  # Mover este botão para aqui
     if train_button:
         if state.sentiment_score is not None and state.selected_touchpoint:
             with st.spinner("Training models... Please wait."):
-
                 # Ajuste para pegar os valores ajustados pelo usuário
                 adjusted_score = state.sentiment_score
                 adjusted_touchpoint = state.selected_touchpoint
