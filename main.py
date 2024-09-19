@@ -90,15 +90,6 @@ with st.form(key='train_form'):
                 pre_vader_score, pre_vader_category, pre_vader_touchpoint = vader_model.analyze(state.feedback)
                 pre_roberta_score, pre_roberta_category, pre_roberta_touchpoint = roberta_model.analyze(state.feedback)
 
-                # Display the pre-training results (optional)
-                pre_training_results = pd.DataFrame({
-                    'Model': ['BERT', 'VADER', 'RoBERTa'],
-                    'Pre-Training Sentiment Score': [pre_bert_score, pre_vader_score, pre_roberta_score],
-                    'Pre-Training Sentiment Category': [pre_bert_category, pre_vader_category, pre_roberta_category],
-                    'Pre-Training Touchpoint': [pre_bert_touchpoint, pre_vader_touchpoint, pre_roberta_touchpoint]
-                })
-                st.dataframe(pre_training_results)
-
                 # Update the models (training step)
                 bert_model.train(state.feedback, state.sentiment_score, state.selected_touchpoint)
                 vader_model.train(state.feedback, state.sentiment_score, state.selected_touchpoint)
@@ -112,7 +103,11 @@ with st.form(key='train_form'):
                 # Insert both pre- and post-training data into the database
                 db.insert_sentiment_data(
                     state.feedback,
-                    pre_bert_score, post_bert_score, pre_bert_touchpoint, post_bert_touchpoint
+                    'BERT',  # Model name
+                    pre_bert_score, 
+                    post_bert_score, 
+                    pre_bert_touchpoint, 
+                    post_bert_touchpoint
                 )
 
                 # Display the post-training results
@@ -126,8 +121,6 @@ with st.form(key='train_form'):
 
                 st.success("Models trained and data saved successfully!")
 
-
-
 # Display current results
 if state.results is not None:
     st.subheader("Current Sentiment Analysis Results")
@@ -139,12 +132,11 @@ if state.results is not None:
 st.subheader("Recent Sentiment Data")
 recent_data = db.get_recent_sentiment_data()
 if recent_data:
-    # Create DataFrame with all returned columns
-    recent_df = pd.DataFrame(recent_data, columns=['Text', 'Pre-Sentiment Score', 'Post-Sentiment Score', 'Pre-Touchpoint', 'Post-Touchpoint'])
+    # Create DataFrame with all returned columns, including 'model_name'
+    recent_df = pd.DataFrame(recent_data, columns=['Text', 'Model', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint'])
     st.dataframe(recent_df)
 else:
     st.info("No recent sentiment data available.")
-
 
 # Create dashboard for tracking model performance over time
 st.header("Model Performance Dashboard")
@@ -153,33 +145,14 @@ st.header("Model Performance Dashboard")
 historical_data = db.get_historical_sentiment_data()
 
 if historical_data:
-    df = pd.DataFrame(historical_data, columns=['Date', 'Pre-Sentiment Score', 'Post-Sentiment Score', 'Pre-Touchpoint', 'Post-Touchpoint'])
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Touchpoint'] = df['Pre-Touchpoint']  # or df['Post-Touchpoint'], depending on what you need
-    df['Sentiment Category'] = df['Pre-Sentiment Score'].apply(get_sentiment_category)
+    df = pd.DataFrame(historical_data, columns=['created_at', 'model_name', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint'])
+    df['Date'] = pd.to_datetime(df['created_at'])
+    df['Touchpoint'] = df['pre_touchpoint']  # or df['post_touchpoint'], depending on what you need
+    df['Sentiment Category'] = df['pre_sentiment_score'].apply(get_sentiment_category)
 
     # Create a line plot for sentiment scores over time
-    fig_sentiment = px.line(df, x='Date', y='Pre-Sentiment Score', title='Sentiment Scores Over Time')
+    fig_sentiment = px.line(df, x='Date', y='pre_sentiment_score', title='Sentiment Scores Over Time')
     st.plotly_chart(fig_sentiment)
-
-    # Create a bar chart for touchpoint distribution
-    fig_touchpoints = px.bar(df['Touchpoint'].value_counts().reset_index(), x='Touchpoint', y='count', title='Touchpoint Distribution')
-    fig_touchpoints.update_layout(xaxis_title='Touchpoint', yaxis_title='Count')
-    st.plotly_chart(fig_touchpoints)
-
-    # Create a pie chart for sentiment category distribution
-    fig_sentiment_dist = px.pie(df, names='Sentiment Category', title='Sentiment Category Distribution')
-    st.plotly_chart(fig_sentiment_dist)
-
-    # Display some summary statistics
-    st.subheader("Summary Statistics")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Analyzed Feedbacks", len(df))
-    with col2:
-        st.metric("Average Sentiment Score", f"{df['Pre-Sentiment Score'].mean():.2f}")
-    with col3:
-        st.metric("Most Common Touchpoint", df['Touchpoint'].mode().values[0])
 
 else:
     st.info("No historical data available for the dashboard. Please analyze and train on some feedback to populate the dashboard.")
