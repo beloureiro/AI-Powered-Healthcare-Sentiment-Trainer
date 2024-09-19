@@ -42,14 +42,14 @@ def create_sentiment_plot(df):
     for category in df['Sentiment Category'].unique():
         category_data = df[df['Sentiment Category'] == category]
         fig.add_trace(go.Bar(
-            x=category_data['Touchpoint'],
+            x=category_data['Model'],  # Alterado para usar 'Model' no eixo x
             y=category_data['Sentiment Score'],
             name=category,  
             marker_color=colors[category]
         ))
     fig.update_layout(
         title='Sentiment Analysis Results',
-        xaxis_title='Healthcare Process Touchpoint',
+        xaxis_title='Model',  # Alterado para 'Model'
         yaxis_title='Sentiment Score',
         barmode='group'
     )

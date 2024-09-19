@@ -180,7 +180,7 @@ if historical_data:
     df['Sentiment Category'] = df['pre_sentiment_score'].apply(get_sentiment_category)
 
     # Create a line plot for sentiment scores over time
-    fig_sentiment = px.line(df, x='Date', y='pre_sentiment_score', title='Sentiment Scores Over Time')
+    fig_sentiment = px.line(df, x='model_name', y='pre_sentiment_score', title='Sentiment Scores Over Time')
     st.plotly_chart(fig_sentiment)
 
 else:
