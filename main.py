@@ -99,6 +99,9 @@ with st.form(key='train_form'):
                 adjusted_score = state.sentiment_score
                 adjusted_touchpoint = state.selected_touchpoint
 
+                # Definir a categoria de sentimento com base no valor ajustado
+                post_sentiment_category = get_sentiment_category(adjusted_score)
+
                 # Utilize esses valores no treinamento para os três modelos
                 bert_model.train(state.feedback, state.bert_category, adjusted_score, adjusted_touchpoint)
                 vader_model.train(state.feedback, state.vader_category, adjusted_score, adjusted_touchpoint)
@@ -113,7 +116,7 @@ with st.form(key='train_form'):
                     state.results.loc[0, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[0, 'Sentiment Category'],
-                    state.bert_category
+                    post_sentiment_category  # Usar a categoria ajustada
                 )
                 db.insert_sentiment_data(
                     state.feedback,
@@ -123,7 +126,7 @@ with st.form(key='train_form'):
                     state.results.loc[1, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[1, 'Sentiment Category'],
-                    state.vader_category
+                    post_sentiment_category  # Usar a categoria ajustada
                 )
                 db.insert_sentiment_data(
                     state.feedback,
@@ -133,14 +136,14 @@ with st.form(key='train_form'):
                     state.results.loc[2, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[2, 'Sentiment Category'],
-                    state.roberta_category
+                    post_sentiment_category  # Usar a categoria ajustada
                 )
 
                 # Exibir os resultados pós-treinamento
                 post_training_results = pd.DataFrame({
                     'Model': ['BERT', 'VADER', 'RoBERTa'],
                     'Post-Training Sentiment Score': [adjusted_score, adjusted_score, adjusted_score],
-                    'Post-Training Sentiment Category': [state.bert_category, state.vader_category, state.roberta_category],
+                    'Post-Training Sentiment Category': [post_sentiment_category, post_sentiment_category, post_sentiment_category],
                     'Post-Training Touchpoint': [adjusted_touchpoint, adjusted_touchpoint, adjusted_touchpoint]
                 })
                 st.dataframe(post_training_results)
