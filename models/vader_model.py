@@ -45,5 +45,5 @@ class VADERModel:
         # Retorna um touchpoint padrão se não houver correspondência
         return "Search and Evaluate Professional Score"
 
-    def train(self, text, sentiment_score, touchpoint):
-        print(f"VADER não requer treinamento. Texto: {text}, sentimento: {sentiment_score}, touchpoint: {touchpoint}")
+    def train(self, *args, **kwargs):
+        print("VADER não requer treinamento.")

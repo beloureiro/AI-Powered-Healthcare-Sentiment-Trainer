@@ -65,5 +65,5 @@ class RoBERTaModel:
         suggested_touchpoint = max(similarities, key=similarities.get)
         return suggested_touchpoint
 
-    def train(self, text, sentiment_score, touchpoint):
-        print(f"Treinamento não implementado para RoBERTa. Texto: {text}, sentimento: {sentiment_score}, touchpoint: {touchpoint}")
+    def train(self, *args, **kwargs):
+        print("Treinamento não implementado para RoBERTa.")

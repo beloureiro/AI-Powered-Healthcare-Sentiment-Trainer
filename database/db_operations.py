@@ -9,7 +9,7 @@ class Database:
     def create_tables(self):
         with self.conn:
             # Drop the table if it exists to recreate it with the correct columns
-            self.conn.execute("DROP TABLE IF EXISTS sentiment_data")
+            self.conn.execute("DROP TABLE IF EXISTS sentiment_data")  
             self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS sentiment_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,25 +19,28 @@ class Database:
                     post_sentiment_score REAL,
                     pre_touchpoint TEXT,
                     post_touchpoint TEXT,
+                    pre_sentiment_category TEXT,  -- Adicione essa linha
+                    post_sentiment_category TEXT, -- Adicione essa linha
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
 
     # Now, accept model_name as a parameter
-    def insert_sentiment_data(self, text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint):
+    def insert_sentiment_data(self, text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category):
         with self.conn:
             self.conn.execute(
-                "INSERT INTO sentiment_data (text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint) VALUES (?, ?, ?, ?, ?, ?)",
-                (text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint)
+                "INSERT INTO sentiment_data (text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category)
             )
-
+ 
     def get_recent_sentiment_data(self, limit=10):
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint FROM sentiment_data ORDER BY created_at DESC LIMIT ?",
+            "SELECT text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category FROM sentiment_data ORDER BY created_at DESC LIMIT ?",
             (limit,)
         )
         return cursor.fetchall()
+
 
     def get_historical_sentiment_data(self):
         cursor = self.conn.cursor()

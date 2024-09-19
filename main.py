@@ -1,14 +1,13 @@
 import streamlit as st
 from streamlit import session_state as state
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
 from models import BERTModel, VADERModel, RoBERTaModel
 from database.db_operations import Database
 from utils import TOUCHPOINTS, get_sentiment_category, display_instructions, create_sentiment_plot
 
 # Initialize models and database
-bert_model = BERTModel()
+bert_model = BERTModel(model_dir="HealthcareSentiment_BERT_v1")
 vader_model = VADERModel()
 roberta_model = RoBERTaModel()
 db = Database()
@@ -22,6 +21,12 @@ if 'selected_touchpoint' not in state:
     state.selected_touchpoint = None
 if 'results' not in state:
     state.results = None
+if 'bert_category' not in state:
+    state.bert_category = None
+if 'vader_category' not in state:
+    state.vader_category = None
+if 'roberta_category' not in state:
+    state.roberta_category = None
 
 # Set page config
 st.set_page_config(page_title="Healthcare Sentiment Trainer", page_icon="🏥", layout="wide")
@@ -47,6 +52,11 @@ with st.form(key='analyze_form'):
             bert_score, bert_category, bert_touchpoint = bert_model.analyze(state.feedback)
             vader_score, vader_category, vader_touchpoint = vader_model.analyze(state.feedback)
             roberta_score, roberta_category, roberta_touchpoint = roberta_model.analyze(state.feedback)
+
+            # Store sentiment categories in session state
+            state.bert_category = bert_category
+            state.vader_category = vader_category
+            state.roberta_category = roberta_category
 
             # Create DataFrame with results
             state.results = pd.DataFrame({
@@ -78,44 +88,60 @@ with st.form(key='sentiment_adjustment_form'):
     # Touchpoint validation
     state.selected_touchpoint = st.selectbox("Validate or change the healthcare process touchpoint:", TOUCHPOINTS, index=TOUCHPOINTS.index(state.selected_touchpoint) if state.selected_touchpoint else 0)
 
-# Train button logic inside a form
+# Treinamento e captura dos valores ajustados
 with st.form(key='train_form'):
     train_button = st.form_submit_button("Train")
     if train_button:
         if state.sentiment_score is not None and state.selected_touchpoint:
             with st.spinner("Training models... Please wait."):
-                
-                # Capture the pre-training results
-                pre_bert_score, pre_bert_category, pre_bert_touchpoint = bert_model.analyze(state.feedback)
-                pre_vader_score, pre_vader_category, pre_vader_touchpoint = vader_model.analyze(state.feedback)
-                pre_roberta_score, pre_roberta_category, pre_roberta_touchpoint = roberta_model.analyze(state.feedback)
 
-                # Update the models (training step)
-                bert_model.train(state.feedback, state.sentiment_score, state.selected_touchpoint)
-                vader_model.train(state.feedback, state.sentiment_score, state.selected_touchpoint)
-                roberta_model.train(state.feedback, state.sentiment_score, state.selected_touchpoint)
+                # Ajuste para pegar os valores ajustados pelo usuário
+                adjusted_score = state.sentiment_score
+                adjusted_touchpoint = state.selected_touchpoint
 
-                # Capture the post-training results
-                post_bert_score, post_bert_category, post_bert_touchpoint = bert_model.analyze(state.feedback)
-                post_vader_score, post_vader_category, post_vader_touchpoint = vader_model.analyze(state.feedback)
-                post_roberta_score, post_roberta_category, post_roberta_touchpoint = roberta_model.analyze(state.feedback)
+                # Utilize esses valores no treinamento para os três modelos
+                bert_model.train(state.feedback, state.bert_category, adjusted_score, adjusted_touchpoint)
+                vader_model.train(state.feedback, state.vader_category, adjusted_score, adjusted_touchpoint)
+                roberta_model.train(state.feedback, state.roberta_category, adjusted_score, adjusted_touchpoint)
 
-                # Insert both pre- and post-training data into the database
+                # Inserir os dados de treinamento no banco de dados para os três modelos
                 db.insert_sentiment_data(
                     state.feedback,
-                    'BERT',  # Model name
-                    pre_bert_score, 
-                    post_bert_score, 
-                    pre_bert_touchpoint, 
-                    post_bert_touchpoint
+                    'BERT',
+                    state.results.loc[0, 'Sentiment Score'],
+                    adjusted_score,
+                    state.results.loc[0, 'Touchpoint'],
+                    adjusted_touchpoint,
+                    state.results.loc[0, 'Sentiment Category'],
+                    state.bert_category
+                )
+                db.insert_sentiment_data(
+                    state.feedback,
+                    'VADER',
+                    state.results.loc[1, 'Sentiment Score'],
+                    adjusted_score,
+                    state.results.loc[1, 'Touchpoint'],
+                    adjusted_touchpoint,
+                    state.results.loc[1, 'Sentiment Category'],
+                    state.vader_category
+                )
+                db.insert_sentiment_data(
+                    state.feedback,
+                    'RoBERTa',
+                    state.results.loc[2, 'Sentiment Score'],
+                    adjusted_score,
+                    state.results.loc[2, 'Touchpoint'],
+                    adjusted_touchpoint,
+                    state.results.loc[2, 'Sentiment Category'],
+                    state.roberta_category
                 )
 
-                # Display the post-training results
+                # Exibir os resultados pós-treinamento
                 post_training_results = pd.DataFrame({
                     'Model': ['BERT', 'VADER', 'RoBERTa'],
-                    'Post-Training Sentiment Score': [post_bert_score, post_vader_score, post_roberta_score],
-                    'Post-Training Sentiment Category': [post_bert_category, post_vader_category, post_roberta_category],
-                    'Post-Training Touchpoint': [post_bert_touchpoint, post_vader_touchpoint, post_roberta_touchpoint]
+                    'Post-Training Sentiment Score': [adjusted_score, adjusted_score, adjusted_score],
+                    'Post-Training Sentiment Category': [state.bert_category, state.vader_category, state.roberta_category],
+                    'Post-Training Touchpoint': [adjusted_touchpoint, adjusted_touchpoint, adjusted_touchpoint]
                 })
                 st.dataframe(post_training_results)
 
@@ -133,7 +159,7 @@ st.subheader("Recent Sentiment Data")
 recent_data = db.get_recent_sentiment_data()
 if recent_data:
     # Create DataFrame with all returned columns, including 'model_name'
-    recent_df = pd.DataFrame(recent_data, columns=['Text', 'Model', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint'])
+    recent_df = pd.DataFrame(recent_data, columns=['Text', 'Model', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint', 'pre_sentiment_category', 'post_sentiment_category'])
     st.dataframe(recent_df)
 else:
     st.info("No recent sentiment data available.")
