@@ -41,7 +41,7 @@ st.title(":green[_AI-Powered_] Healthcare Sentiment :green[Trainer]")
 display_instructions()
 
 # Input text box for patient feedback
-state.feedback = st.text_area("", value=state.feedback, height=200, placeholder="Enter patient feedback here...")
+state.feedback = st.text_area("", value=state.feedback, height=150, placeholder="Enter patient feedback here...")
 
 # Analyze sentiment form
 with st.form(key='analyze_form'):

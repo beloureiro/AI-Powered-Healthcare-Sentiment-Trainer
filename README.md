@@ -1,78 +1,51 @@
-# Healthcare Sentiment Trainer
+# AI-Powered Healthcare Sentiment Trainer
 
-## Project Overview
+## Overview
+AI-Powered Healthcare Sentiment Trainer is an advanced platform designed for **fine-tuning** AI models such as BERT, RoBERTa, and VADER to accurately analyze patient feedback within the healthcare sector. This platform is particularly focused on optimizing these models for sentiment analysis tailored to healthcare-specific data.
 
-The Healthcare Sentiment Trainer is a Streamlit-based web application designed to analyze, compare, and continuously improve sentiment analysis models applied to patient reviews in the healthcare sector. This tool aims to help healthcare providers better understand patient feedback and improve their services based on sentiment analysis.
+## Fine-Tuning Features
+- **BERT Fine-Tuning**: Utilizes a pre-trained BERT model that has been fine-tuned on healthcare datasets to improve the accuracy of sentiment analysis related to patient feedback.
+- **RoBERTa Fine-Tuning**: RoBERTa, a robust variant of BERT, is further fine-tuned to specialize in identifying subtle sentiment variations in healthcare reviews.
+- **VADER Sentiment**: Though VADER is a rule-based model, it complements the fine-tuned models by providing quick insights for shorter, direct feedback.
+- **Customizable Sentiment Models**: The platform allows for ongoing fine-tuning and updates to the models as new data becomes available, ensuring adaptability and improving performance over time.
+  
+## Performance Dashboard
+The platform includes an intuitive Streamlit-based dashboard that allows users to:
+1. Input patient feedback.
+2. View sentiment analysis results using fine-tuned models.
+3. Track and compare model performance in real-time through dynamic visualizations.
+4. Evaluate and store sentiment outcomes for further analysis.
 
-## Features
+## Database Integration
+The results from sentiment analysis are stored in a connected database, allowing for long-term tracking and performance comparison of models over time.
 
-1. **Multi-model Sentiment Analysis**: Utilizes BERT, VADER, and RoBERTa models for comprehensive sentiment analysis.
-2. **Interactive User Interface**: Built with Streamlit for an intuitive and responsive user experience.
-3. **Sentiment Adjustment**: Allows users to fine-tune sentiment scores and categories.
-4. **Touchpoint Validation**: Enables users to validate and adjust the healthcare process touchpoint associated with each review.
-5. **Model Training**: Incorporates user feedback to continuously improve model performance.
-6. **Performance Dashboard**: Tracks and visualizes model performance over time.
+## Setup Instructions
+To set up the tool, clone the repository and install the necessary dependencies.
 
-## Installation
+```bash
+# Clone the repository
+git clone https://github.com/beloureiro/AI-Powered-Healthcare-Sentiment-Trainer.git
 
-To run the Healthcare Sentiment Trainer locally, follow these steps:
+# Navigate to the repository
+cd AI-Powered-Healthcare-Sentiment-Trainer
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/healthcare-sentiment-trainer.git
-   cd healthcare-sentiment-trainer
-   ```
+# Install required dependencies
+pip install -r requirements.txt
 
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+# Run the Streamlit app
+streamlit run main.py
+```
 
-3. Set up the database:
-   - Ensure you have PostgreSQL installed and running.
-   - Create a new database for the project.
-   - Set the following environment variables with your database credentials:
-     - `PGHOST`
-     - `PGDATABASE`
-     - `PGUSER`
-     - `PGPASSWORD`
-     - `PGPORT`
+## Usage
+Once set up, users can input patient feedback through the dashboard and receive real-time sentiment analysis using fine-tuned AI models. Results are visualized and stored in the database.
 
-## Usage Instructions
-
-1. Start the Streamlit app:
-   ```
-   streamlit run main.py
-   ```
-
-2. Open your web browser and navigate to `http://localhost:5000` (or the port specified in the terminal output).
-
-3. Enter patient feedback in the provided text area.
-
-4. Click the "Analyze Sentiment" button to process the feedback using multiple models.
-
-5. Review the sentiment analysis results in the table and graph.
-
-6. If needed, adjust the sentiment using the provided buttons and scale.
-
-7. Validate or change the healthcare process touchpoint using the dropdown menu.
-
-8. Click the "Train" button to update the models with your corrections.
-
-9. Explore the Model Performance Dashboard to track sentiment trends and touchpoint distribution over time.
+```bash
+# Example command to run sentiment analysis
+python main.py --model bert --input data/reviews.csv
+```
 
 ## Contributing
-
-We welcome contributions to the Healthcare Sentiment Trainer! If you'd like to contribute, please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and commit them with clear, descriptive messages.
-4. Push your changes to your fork.
-5. Submit a pull request with a detailed description of your changes.
-
-Please ensure that your code adheres to the project's coding standards and includes appropriate tests.
+Feel free to fork the repository and submit pull requests to improve the tool or add new features.
 
 ## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
