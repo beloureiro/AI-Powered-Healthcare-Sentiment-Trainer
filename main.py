@@ -8,7 +8,7 @@ from models import (
     RoBERTaModel,
     MultilingualBERTModel,
     TwitterRoBERTaModel,
-    BERTweetModel,
+    # BERTweetModel,  # Remover esta linha
 )
 from database.db_operations import Database
 from utils import TOUCHPOINTS, get_sentiment_category, display_instructions, create_sentiment_plot
@@ -19,7 +19,7 @@ vader_model = VADERModel()
 roberta_model = RoBERTaModel()
 multilingual_bert_model = MultilingualBERTModel()
 twitter_roberta_model = TwitterRoBERTaModel()
-bertweet_model = BERTweetModel()
+# bertweet_model = BERTweetModel()  # Remover esta linha
 db = Database()
 
 # Initialize session state variables
@@ -41,8 +41,8 @@ if 'multilingual_category' not in state:
     state.multilingual_category = None
 if 'twitter_category' not in state:
     state.twitter_category = None
-if 'bertweet_category' not in state:
-    state.bertweet_category = None
+# if 'bertweet_category' not in state:
+#     state.bertweet_category = None  # Remover esta linha
 
 # Set page config
 st.set_page_config(page_title="AI-Powered Sentiment Trainer", page_icon="🏥", layout="wide")
@@ -84,14 +84,9 @@ with st.form(key='analyze_form'):
             bert_score, bert_category, bert_touchpoint = bert_model.analyze(state.feedback)
             vader_score, vader_category, vader_touchpoint = vader_model.analyze(state.feedback)
             roberta_score, roberta_category, roberta_touchpoint = roberta_model.analyze(state.feedback)
-
-            # Adjusted calls for new models to capture score, category, and touchpoint
-            multilingual_score, multilingual_raw_category, multilingual_touchpoint = multilingual_bert_model.analyze(state.feedback)
+            multilingual_score, multilingual_category, multilingual_touchpoint = multilingual_bert_model.analyze(state.feedback)
             twitter_score, twitter_category, twitter_touchpoint = twitter_roberta_model.analyze(state.feedback)
-            bertweet_score, bertweet_category, bertweet_touchpoint = bertweet_model.analyze(state.feedback)
-
-            # Map multilingual category to standard sentiment categories
-            multilingual_category = map_multilingual_category(multilingual_raw_category)
+            # bertweet_score, bertweet_category, bertweet_touchpoint = bertweet_model.analyze(state.feedback)  # Remover esta linha
 
             # Store sentiment categories in session state
             state.bert_category = bert_category
@@ -99,29 +94,26 @@ with st.form(key='analyze_form'):
             state.roberta_category = roberta_category
             state.multilingual_category = multilingual_category
             state.twitter_category = twitter_category
-            state.bertweet_category = bertweet_category
-
-            # Optional: Obtain touchpoints for new models (set as None for now)
-            # Touchpoints already captured as None in analyze methods
+            # state.bertweet_category = bertweet_category  # Remover esta linha
 
             # Create DataFrame with results
             state.results = pd.DataFrame({
-                'Model': ['BERT', 'VADER', 'RoBERTa', 'MultilingualBERT', 'TwitterRoBERTa', 'BERTweet'],
+                'Model': ['BERT', 'VADER', 'RoBERTa', 'MultilingualBERT', 'TwitterRoBERTa'],  # Remover 'BERTweet'
                 'Sentiment Score': [
                     bert_score,
                     vader_score,
                     roberta_score,
                     multilingual_score,
                     twitter_score,
-                    bertweet_score
+                    # bertweet_score  # Remover esta linha
                 ],
                 'Sentiment Category': [
                     bert_category,
                     vader_category,
                     roberta_category,
-                    state.multilingual_category,
-                    state.twitter_category,
-                    state.bertweet_category
+                    multilingual_category,
+                    twitter_category,
+                    # bertweet_category  # Remover esta linha
                 ],
                 'Touchpoint': [
                     bert_touchpoint,
@@ -129,7 +121,7 @@ with st.form(key='analyze_form'):
                     roberta_touchpoint,
                     multilingual_touchpoint,
                     twitter_touchpoint,
-                    bertweet_touchpoint
+                    # bertweet_touchpoint  # Remover esta linha
                 ]
             })
 
