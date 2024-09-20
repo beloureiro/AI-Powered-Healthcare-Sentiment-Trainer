@@ -2,7 +2,14 @@ import streamlit as st
 from streamlit import session_state as state
 import pandas as pd
 import plotly.express as px
-from models import BERTModel, VADERModel, RoBERTaModel
+from models import (
+    BERTModel,
+    VADERModel,
+    RoBERTaModel,
+    MultilingualBERTModel,
+    TwitterRoBERTaModel,
+    BERTweetModel,
+)
 from database.db_operations import Database
 from utils import TOUCHPOINTS, get_sentiment_category, display_instructions, create_sentiment_plot
 
@@ -10,6 +17,9 @@ from utils import TOUCHPOINTS, get_sentiment_category, display_instructions, cre
 bert_model = BERTModel(model_dir="HealthcareSentiment_BERT_v1")
 vader_model = VADERModel()
 roberta_model = RoBERTaModel()
+multilingual_bert_model = MultilingualBERTModel()
+twitter_roberta_model = TwitterRoBERTaModel()
+bertweet_model = BERTweetModel()
 db = Database()
 
 # Initialize session state variables
@@ -27,6 +37,12 @@ if 'vader_category' not in state:
     state.vader_category = None
 if 'roberta_category' not in state:
     state.roberta_category = None
+if 'multilingual_category' not in state:
+    state.multilingual_category = None
+if 'twitter_category' not in state:
+    state.twitter_category = None
+if 'bertweet_category' not in state:
+    state.bertweet_category = None
 
 # Set page config
 st.set_page_config(page_title="AI-Powered Sentiment Trainer", page_icon="🏥", layout="wide")
@@ -41,7 +57,23 @@ st.title(":green[_AI-Powered_] Healthcare Sentiment :green[Trainer]")
 display_instructions()
 
 # Input text box for patient feedback
-state.feedback = st.text_area("", value=state.feedback, height=150, placeholder="Enter patient feedback here...")
+state.feedback = st.text_area(
+    "",
+    value=state.feedback,
+    height=150,
+    placeholder="Enter patient feedback here..."
+)
+
+# Function to map MultilingualBERTModel categories to standard sentiment categories
+def map_multilingual_category(category):
+    if category in ['1 star', '2 stars']:
+        return 'Negative'
+    elif category == '3 stars':
+        return 'Neutral'
+    elif category in ['4 stars', '5 stars']:
+        return 'Positive'
+    else:
+        return 'Neutral'  # default
 
 # Analyze sentiment form
 with st.form(key='analyze_form'):
@@ -53,17 +85,52 @@ with st.form(key='analyze_form'):
             vader_score, vader_category, vader_touchpoint = vader_model.analyze(state.feedback)
             roberta_score, roberta_category, roberta_touchpoint = roberta_model.analyze(state.feedback)
 
+            # Adjusted calls for new models to capture score, category, and touchpoint
+            multilingual_score, multilingual_raw_category, multilingual_touchpoint = multilingual_bert_model.analyze(state.feedback)
+            twitter_score, twitter_category, twitter_touchpoint = twitter_roberta_model.analyze(state.feedback)
+            bertweet_score, bertweet_category, bertweet_touchpoint = bertweet_model.analyze(state.feedback)
+
+            # Map multilingual category to standard sentiment categories
+            multilingual_category = map_multilingual_category(multilingual_raw_category)
+
             # Store sentiment categories in session state
             state.bert_category = bert_category
             state.vader_category = vader_category
             state.roberta_category = roberta_category
+            state.multilingual_category = multilingual_category
+            state.twitter_category = twitter_category
+            state.bertweet_category = bertweet_category
+
+            # Optional: Obtain touchpoints for new models (set as None for now)
+            # Touchpoints already captured as None in analyze methods
 
             # Create DataFrame with results
             state.results = pd.DataFrame({
-                'Model': ['BERT', 'VADER', 'RoBERTa'],
-                'Sentiment Score': [bert_score, vader_score, roberta_score],
-                'Sentiment Category': [bert_category, vader_category, roberta_category],
-                'Touchpoint': [bert_touchpoint, vader_touchpoint, roberta_touchpoint]
+                'Model': ['BERT', 'VADER', 'RoBERTa', 'MultilingualBERT', 'TwitterRoBERTa', 'BERTweet'],
+                'Sentiment Score': [
+                    bert_score,
+                    vader_score,
+                    roberta_score,
+                    multilingual_score,
+                    twitter_score,
+                    bertweet_score
+                ],
+                'Sentiment Category': [
+                    bert_category,
+                    vader_category,
+                    roberta_category,
+                    state.multilingual_category,
+                    state.twitter_category,
+                    state.bertweet_category
+                ],
+                'Touchpoint': [
+                    bert_touchpoint,
+                    vader_touchpoint,
+                    roberta_touchpoint,
+                    multilingual_touchpoint,
+                    twitter_touchpoint,
+                    bertweet_touchpoint
+                ]
             })
 
 # Sentiment adjustment form
@@ -76,36 +143,54 @@ with st.form(key='sentiment_adjustment_form'):
         neutral = st.form_submit_button("Neutral")
     with col3:
         positive = st.form_submit_button("Positive")
-    
+
     if negative:
-        state.sentiment_score = st.slider("Fine-tune negative sentiment", -1.0, 0.0, -0.5, 0.01, key='neg_slider')
+        state.sentiment_score = st.slider(
+            "Fine-tune negative sentiment",
+            -1.0,
+            0.0,
+            -0.5,
+            0.01,
+            key='neg_slider'
+        )
     elif neutral:
         state.sentiment_score = 0.0
         st.info("Neutral sentiment set to 0.0")
     elif positive:
-        state.sentiment_score = st.slider("Fine-tune positive sentiment", 0.0, 1.0, 0.5, 0.01, key='pos_slider')
-    
-    # Touchpoint validation
-    state.selected_touchpoint = st.selectbox("Validate or change the healthcare process touchpoint:", TOUCHPOINTS, index=TOUCHPOINTS.index(state.selected_touchpoint) if state.selected_touchpoint else 0)
+        state.sentiment_score = st.slider(
+            "Fine-tune positive sentiment",
+            0.0,
+            1.0,
+            0.5,
+            0.01,
+            key='pos_slider'
+        )
 
-    # Mover o botão "Train" para ficar abaixo do seletor de touchpoint
-    train_button = st.form_submit_button("Train")  # Mover este botão para aqui
+    # Touchpoint validation
+    state.selected_touchpoint = st.selectbox(
+        "Validate or change the healthcare process touchpoint:",
+        TOUCHPOINTS,
+        index=TOUCHPOINTS.index(state.selected_touchpoint) if state.selected_touchpoint else 0
+    )
+
+    # Move the "Train" button to be below the touchpoint selector
+    train_button = st.form_submit_button("Train")
     if train_button:
         if state.sentiment_score is not None and state.selected_touchpoint:
             with st.spinner("Training models... Please wait."):
-                # Ajuste para pegar os valores ajustados pelo usuário
+                # Adjust to get the values adjusted by the user
                 adjusted_score = state.sentiment_score
                 adjusted_touchpoint = state.selected_touchpoint
 
-                # Definir a categoria de sentimento com base no valor ajustado
+                # Define the sentiment category based on the adjusted value
                 post_sentiment_category = get_sentiment_category(adjusted_score)
 
-                # Utilize esses valores no treinamento para os três modelos
-                bert_model.train(state.feedback, state.bert_category, adjusted_score, adjusted_touchpoint)
-                vader_model.train(state.feedback, state.vader_category, adjusted_score, adjusted_touchpoint)
-                roberta_model.train(state.feedback, state.roberta_category, adjusted_score, adjusted_touchpoint)
+                # Use these values in training for the three main models
+                bert_model.train(state.feedback, adjusted_score, adjusted_touchpoint)
+                vader_model.train(state.feedback, adjusted_score, adjusted_touchpoint)
+                roberta_model.train(state.feedback, adjusted_score, adjusted_touchpoint)
 
-                # Inserir os dados de treinamento no banco de dados para os três modelos
+                # Insert training data into the database for the three models
                 db.insert_sentiment_data(
                     state.feedback,
                     'BERT',
@@ -114,7 +199,7 @@ with st.form(key='sentiment_adjustment_form'):
                     state.results.loc[0, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[0, 'Sentiment Category'],
-                    post_sentiment_category  # Usar a categoria ajustada
+                    post_sentiment_category  # Use adjusted category
                 )
                 db.insert_sentiment_data(
                     state.feedback,
@@ -124,7 +209,7 @@ with st.form(key='sentiment_adjustment_form'):
                     state.results.loc[1, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[1, 'Sentiment Category'],
-                    post_sentiment_category  # Usar a categoria ajustada
+                    post_sentiment_category  # Use adjusted category
                 )
                 db.insert_sentiment_data(
                     state.feedback,
@@ -134,15 +219,23 @@ with st.form(key='sentiment_adjustment_form'):
                     state.results.loc[2, 'Touchpoint'],
                     adjusted_touchpoint,
                     state.results.loc[2, 'Sentiment Category'],
-                    post_sentiment_category  # Usar a categoria ajustada
+                    post_sentiment_category  # Use adjusted category
                 )
 
-                # Exibir os resultados pós-treinamento
+                # Display post-training results
                 post_training_results = pd.DataFrame({
                     'Model': ['BERT', 'VADER', 'RoBERTa'],
                     'Post-Training Sentiment Score': [adjusted_score, adjusted_score, adjusted_score],
-                    'Post-Training Sentiment Category': [post_sentiment_category, post_sentiment_category, post_sentiment_category],
-                    'Post-Training Touchpoint': [adjusted_touchpoint, adjusted_touchpoint, adjusted_touchpoint]
+                    'Post-Training Sentiment Category': [
+                        post_sentiment_category,
+                        post_sentiment_category,
+                        post_sentiment_category
+                    ],
+                    'Post-Training Touchpoint': [
+                        adjusted_touchpoint,
+                        adjusted_touchpoint,
+                        adjusted_touchpoint
+                    ]
                 })
                 st.dataframe(post_training_results)
 
@@ -160,7 +253,19 @@ st.subheader("Recent Sentiment Data")
 recent_data = db.get_recent_sentiment_data()
 if recent_data:
     # Create DataFrame with all returned columns, including 'model_name'
-    recent_df = pd.DataFrame(recent_data, columns=['Text', 'Model', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint', 'pre_sentiment_category', 'post_sentiment_category'])
+    recent_df = pd.DataFrame(
+        recent_data,
+        columns=[
+            'Text',
+            'Model',
+            'pre_sentiment_score',
+            'post_sentiment_score',
+            'pre_touchpoint',
+            'post_touchpoint',
+            'pre_sentiment_category',
+            'post_sentiment_category'
+        ]
+    )
     st.dataframe(recent_df)
 else:
     st.info("No recent sentiment data available.")
@@ -172,13 +277,29 @@ st.header("Model Performance Dashboard")
 historical_data = db.get_historical_sentiment_data()
 
 if historical_data:
-    df = pd.DataFrame(historical_data, columns=['created_at', 'model_name', 'pre_sentiment_score', 'post_sentiment_score', 'pre_touchpoint', 'post_touchpoint'])
+    df = pd.DataFrame(
+        historical_data,
+        columns=[
+            'created_at',
+            'model_name',
+            'pre_sentiment_score',
+            'post_sentiment_score',
+            'pre_touchpoint',
+            'post_touchpoint'
+        ]
+    )
     df['Date'] = pd.to_datetime(df['created_at'])
-    df['Touchpoint'] = df['pre_touchpoint']  # or df['post_touchpoint'], depending on what you need
+    df['Touchpoint'] = df['pre_touchpoint']  # or df['post_touchpoint', depending on what you need]
     df['Sentiment Category'] = df['pre_sentiment_score'].apply(get_sentiment_category)
 
     # Create a line plot for sentiment scores over time
-    fig_sentiment = px.line(df, x='model_name', y='pre_sentiment_score', title='Sentiment Scores Over Time')
+    fig_sentiment = px.line(
+        df,
+        x='Date',
+        y='pre_sentiment_score',
+        color='model_name',
+        title='Sentiment Scores Over Time'
+    )
     st.plotly_chart(fig_sentiment)
 
 else:
