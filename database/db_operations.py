@@ -9,7 +9,7 @@ class Database:
     def create_tables(self):
         with self.conn:
             # Drop the table if it exists to recreate it with the correct columns
-            self.conn.execute("DROP TABLE IF EXISTS sentiment_data")  
+            #self.conn.execute("DROP TABLE IF EXISTS sentiment_data")  -- linha comentada para iniciar os registros fora do teste
             self.conn.execute("""
                 CREATE TABLE IF NOT EXISTS sentiment_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,11 +33,10 @@ class Database:
                 (text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category)
             )
  
-    def get_recent_sentiment_data(self, limit=10):
+    def get_recent_sentiment_data(self):
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category FROM sentiment_data ORDER BY created_at DESC LIMIT ?",
-            (limit,)
+            "SELECT text, model_name, pre_sentiment_score, post_sentiment_score, pre_touchpoint, post_touchpoint, pre_sentiment_category, post_sentiment_category FROM sentiment_data ORDER BY created_at DESC"
         )
         return cursor.fetchall()
 

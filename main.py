@@ -260,6 +260,39 @@ if state.results is not None:
     current_fig = create_sentiment_plot(state.results)
     st.plotly_chart(current_fig)
 
+# Create dashboard for tracking model performance over time
+st.header("Model Performance Dashboard")
+
+# Fetch historical data from the database
+historical_data = db.get_historical_sentiment_data()
+
+if historical_data:
+    df = pd.DataFrame(
+        historical_data,
+        columns=[
+            'created_at',
+            'model_name',
+            'pre_sentiment_score',
+            'post_sentiment_score',
+            'pre_touchpoint',
+            'post_touchpoint'
+        ]
+    )
+    df['Date'] = pd.to_datetime(df['created_at'])
+    
+    # Create a pivot table for the area chart using pre_sentiment_score
+    area_data = df.pivot_table(index='Date', columns='model_name', values='pre_sentiment_score', aggfunc='mean').fillna(0)
+
+    # Add post sentiment score to the area data
+    post_scores = df.groupby('Date')['post_sentiment_score'].mean()  # Média dos post_sentiment_scores por data
+    area_data['Post Sentiment Score'] = post_scores  # Adiciona a coluna ao DataFrame
+
+    # Create an area chart
+    st.area_chart(area_data, use_container_width=True)
+
+else:
+    st.info("No historical data available for the dashboard. Please analyze and train on some feedback to populate the dashboard.")
+
 # Display recent sentiment data
 st.subheader("Recent Sentiment Data")
 recent_data = db.get_recent_sentiment_data()
@@ -281,41 +314,6 @@ if recent_data:
     st.dataframe(recent_df)
 else:
     st.info("No recent sentiment data available.")
-
-# Create dashboard for tracking model performance over time
-st.header("Model Performance Dashboard")
-
-# Fetch historical data from the database
-historical_data = db.get_historical_sentiment_data()
-
-if historical_data:
-    df = pd.DataFrame(
-        historical_data,
-        columns=[
-            'created_at',
-            'model_name',
-            'pre_sentiment_score',
-            'post_sentiment_score',
-            'pre_touchpoint',
-            'post_touchpoint'
-        ]
-    )
-    df['Date'] = pd.to_datetime(df['created_at'])
-    df['Touchpoint'] = df['pre_touchpoint']  # or df['post_touchpoint', depending on what you need]
-    df['Sentiment Category'] = df['pre_sentiment_score'].apply(get_sentiment_category)
-
-    # Create a line plot for sentiment scores over time
-    fig_sentiment = px.line(
-        df,
-        x='Date',
-        y='pre_sentiment_score',
-        color='model_name',
-        title='Sentiment Scores Over Time'
-    )
-    st.plotly_chart(fig_sentiment)
-
-else:
-    st.info("No historical data available for the dashboard. Please analyze and train on some feedback to populate the dashboard.")
 
 # Close the database connection when the app is done
 db.close()
