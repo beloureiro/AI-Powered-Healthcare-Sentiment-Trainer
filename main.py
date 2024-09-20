@@ -213,6 +213,26 @@ with st.form(key='sentiment_adjustment_form'):
                     state.results.loc[2, 'Sentiment Category'],
                     post_sentiment_category  # Use adjusted category
                 )
+                db.insert_sentiment_data(
+                    state.feedback,
+                    'MultilingualBERT',
+                    state.results.loc[3, 'Sentiment Score'],
+                    adjusted_score,
+                    state.results.loc[3, 'Touchpoint'],
+                    adjusted_touchpoint,
+                    state.results.loc[3, 'Sentiment Category'],
+                    post_sentiment_category  # Use adjusted category
+                )
+                db.insert_sentiment_data(
+                    state.feedback,
+                    'TwitterRoBERTa',
+                    state.results.loc[4, 'Sentiment Score'],
+                    adjusted_score,
+                    state.results.loc[4, 'Touchpoint'],
+                    adjusted_touchpoint,
+                    state.results.loc[4, 'Sentiment Category'],
+                    post_sentiment_category  # Use adjusted category
+                )
 
                 # Display post-training results
                 post_training_results = pd.DataFrame({
